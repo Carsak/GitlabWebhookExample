@@ -1,0 +1,1 @@
+C:37:"PHPUnit\Runner\DefaultTestResultCache":289:{a:2:{s:7:"defects";a:2:{s:32:"WebhookTest::testWebhookResponse";i:3;s:43:"WebhookTest::testRedmineUpdateIssueResponse";i:3;}s:5:"times";a:3:{s:24:"WebhookTest::testExample";d:0.11;s:32:"WebhookTest::testWebhookResponse";d:0.007;s:43:"WebhookTest::testRedmineUpdateIssueResponse";d:1.383;}}}

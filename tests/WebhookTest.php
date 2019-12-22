@@ -1,10 +1,12 @@
 <?php
 
 use App\Webhook\Response;
+use Redmine\Client;
 
 class WebhookTest extends TestCase
 {
 
+    /** проверка класса-парсера запроса вебхука */
     public function testWebhookResponse()
     {
         $webhookResponse = new Response($this->getFakeResponseFromWebhook());
@@ -16,6 +18,9 @@ class WebhookTest extends TestCase
 
     }
 
+    /**
+     * Если обновление прошло успешно
+     */
     public function testRedmineIssueUpdatedSuccess()
     {
         $this->json('POST', '/redmine/updateIssue', json_decode($this->getFakeResponseFromWebhook(), true));
@@ -26,6 +31,9 @@ class WebhookTest extends TestCase
         );
     }
 
+    /**
+     * Если вебхук прилетел при обновлении уже существующего мерж реквеста
+     */
     public function testRedmineIssueUpdatedNegative()
     {
         $body = json_decode($this->getFakeResponseFromWebhook(), true);
@@ -38,6 +46,34 @@ class WebhookTest extends TestCase
         );
     }
 
+    /**
+     * Если пришла ошибка от редмайна
+     */
+    public function testRedmineIssueUpdatingFail()
+    {
+        $body = json_decode($this->getFakeResponseFromWebhook(), true);
+        //Мок редмайн клиента, регистрация мока в приложении
+        $this->app->singleton(Client::class, function () {
+            $mock = $this->createMock(Client::class);
+            $mockApi = $this->createMock(Redmine\Api\Issue::class);
+            $mockApi->method('show')->willReturn(['issue' => ['description' => 'Some text']]);
+            $mockApi->method('update')->willReturn('Some error text');
+            $mock->issue = $mockApi;
+
+            return $mock;
+        });
+        $this->json('POST', '/redmine/updateIssue', $body);
+
+        $this->assertResponseStatus(400);
+        $this->assertEquals(
+            'Some error text', $this->response->getContent()
+        );
+    }
+
+    /**
+     * Данные от вебхука
+     * @return string
+     */
     private function getFakeResponseFromWebhook(): string
     {
         // пример запроса от Вебхука при событии с мерж реквестами

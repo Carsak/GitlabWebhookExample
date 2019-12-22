@@ -1,5 +1,8 @@
 <?php
 
+use App\Webhook\Credential;
+use Redmine\Client;
+
 require_once __DIR__.'/../vendor/autoload.php';
 
 (new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
@@ -46,8 +49,10 @@ $app->singleton(
     App\Console\Kernel::class
 );
 
-$app->singleton(\Redmine\Client::class, function () {
-    return new \Redmine\Client('', '');
+$app->singleton(Client::class, function () {
+    $credential = new Credential();
+
+    return new Client($credential->getRedmineHost(), $credential->getBotApiKey());
 });
 
 /*

@@ -1,22 +1,13 @@
 <?php
 
+use App\Webhook\Response;
+
 class WebhookTest extends TestCase
 {
-    /**
-     * Smoke test of main page
-     */
-    public function testExample()
-    {
-        $this->get('/');
-
-        $this->assertEquals(
-            $this->app->version(), $this->response->getContent()
-        );
-    }
 
     public function testWebhookResponse()
     {
-        $webhookResponse = new \App\Webhook\Response($this->getFakeResponseFromWebhook());
+        $webhookResponse = new Response($this->getFakeResponseFromWebhook());
 
         $this->assertTrue($webhookResponse->getBranchName() === 'ma-851250-viewport', "Проверка, что из запроса корректно получено имя ветки");
         $this->assertTrue($webhookResponse->getActionName() === 'open', "Проверка, что из запроса корректно получено имя события/действия");
@@ -25,13 +16,25 @@ class WebhookTest extends TestCase
 
     }
 
-    public function testRedmineUpdateIssueResponse()
+    public function testRedmineIssueUpdatedSuccess()
     {
         $this->json('POST', '/redmine/updateIssue', json_decode($this->getFakeResponseFromWebhook(), true));
 
         $this->assertResponseOk();
         $this->assertEquals(
             'Обновление прошло успешно', $this->response->getContent()
+        );
+    }
+
+    public function testRedmineIssueUpdatedNegative()
+    {
+        $body = json_decode($this->getFakeResponseFromWebhook(), true);
+        $body['object_attributes']['action'] = 'updated';
+        $this->json('POST', '/redmine/updateIssue', $body);
+
+        $this->assertResponseStatus(400);
+        $this->assertEquals(
+            'Обновлять можно только при открытий Мерж реквеста', $this->response->getContent()
         );
     }
 
